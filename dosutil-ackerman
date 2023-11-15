@@ -84,23 +84,14 @@ interactive_mode() {
     select file in "${files[@]}"; do
         if [ -n "$file" ]; then
             PS3="Select a command: "
-            select cmd in "type" "copy" "ren" "del" "move" "help" "copy!" "del!" "ren!"; do
+            select cmd in "type" "copy" "ren" "del" "move" "help" "copy!" "move!" "ren!"; do
                 case $cmd in
-                    "type"|"del"|"move"|"help")
+                    "type"|"del"|"help")
                         run_command "$cmd" "$file"
                         ;;
-                    "copy"|"ren")
+                    "copy"|"ren"|"move"|"copy!"|"ren!"|"move!")
                         read -p "Enter destination: " destination
                         run_command "$cmd" "$file" "$destination"
-                        ;;
-                    "copy!"|"del!"|"ren!")
-                        read -p "Enter destination: " destination
-                        read -p "Are you sure? (y/n): " confirm
-                        if [ "$confirm" == "y" ]; then
-                            run_command "${cmd%?}" "$file" "$destination"
-                        else
-                            echo "Operation canceled."
-                        fi
                         ;;
                     *)
                         echo "Invalid command."
@@ -207,6 +198,39 @@ else
             echo "Error: Invalid command '$COMMAND'."
             usage
             ;;
+			
+		# SPECIAL CASES
+		
+		"move!")
+            if [ -z "$SOURCE" ] || [ -z "$DESTINATION" ]; then
+                echo "Error: 'move' command requires source and destination filenames."
+                usage
+            else
+                verify_source "$SOURCE"
+                run_command "mv -f" "$SOURCE" "$DESTINATION"
+            fi
+            ;;
+			
+        "ren!")
+            if [ -z "$SOURCE" ] || [ -z "$DESTINATION" ]; then
+                echo "Error: 'ren' command requires source and destination filenames."
+                usage
+            else
+                verify_source "$SOURCE"
+                run_command "mv -f" "$SOURCE" "$DESTINATION"
+            fi
+            ;;
+			
+        "copy!")
+            if [ -z "$SOURCE" ] || [ -z "$DESTINATION" ]; then
+                echo "Error: 'copy' command requires source and destination filenames."
+                usage
+            else
+                verify_source "$SOURCE"
+                run_command "cp -f" "$SOURCE" "$DESTINATION"
+            fi
+            ;;
+			
     esac
 fi
 
