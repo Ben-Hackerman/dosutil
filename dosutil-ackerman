@@ -196,11 +196,6 @@ function handle_command() {
         "help")
             usage
             ;;
-
-        *)
-            echo "Error: Invalid command '$command'."
-            usage
-            ;;
 			
 		# SPECIAL CASES
 		
@@ -232,6 +227,11 @@ function handle_command() {
                 verify_source "$source"
                 run_command "cp -f" "$source" "$destination"
             fi
+            ;;
+			
+        *)
+            echo "Error: Invalid command '$command'."
+            usage
             ;;
     esac
 }
