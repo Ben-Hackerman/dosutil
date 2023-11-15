@@ -131,61 +131,65 @@ run_command() {
 
 # handles translation from UNIX to DOS
 function handle_command() {
-    case "$COMMAND" in
+    local command="$1"
+    local source="$2"
+    local destination="$3"
+
+    case "$command" in
         "author")
             echo "Ben Ackerman"
             ;;
 
         "type")
-            if [ -z "$SOURCE" ]; then
+            if [ -z "$source" ]; then
                 echo "Error: Please provide a file name for 'type' command."
                 usage
             else
-                verify_source "$SOURCE"
-                cat "$SOURCE"
+                verify_source "$source"
+                cat "$source"
             fi
             ;;
 
         "copy")
-            if [ -z "$SOURCE" ] || [ -z "$DESTINATION" ]; then
+            if [ -z "$source" ] || [ -z "$destination" ]; then
                 echo "Error: 'copy' command requires source and destination filenames."
                 usage
             else
-                verify_source "$SOURCE"
-                verify_no_dest "$DESTINATION"
-                run_command "cp" "$SOURCE" "$DESTINATION"
+                verify_source "$source"
+                verify_no_dest "$destination"
+                run_command "cp" "$source" "$destination"
             fi
             ;;
 
         "ren")
-            if [ -z "$SOURCE" ] || [ -z "$DESTINATION" ]; then
+            if [ -z "$source" ] || [ -z "$destination" ]; then
                 echo "Error: 'ren' command requires source and destination filenames."
                 usage
             else
-                verify_source "$SOURCE"
-                verify_no_dest "$DESTINATION"
-                run_command "mv" "$SOURCE" "$DESTINATION"
+                verify_source "$source"
+                verify_no_dest "$destination"
+                run_command "mv" "$source" "$destination"
             fi
             ;;
 
         "move")
-            if [ -z "$SOURCE" ] || [ -z "$DESTINATION" ]; then
+            if [ -z "$source" ] || [ -z "$destination" ]; then
                 echo "Error: 'move' command requires source and destination filenames."
                 usage
             else
-                verify_source "$SOURCE"
-                verify_no_dest "$DESTINATION"
-                run_command "mv" "$SOURCE" "$DESTINATION"
+                verify_source "$source"
+                verify_no_dest "$destination"
+                run_command "mv" "$source" "$destination"
             fi
             ;;
 
         "del")
-            if [ -z "$SOURCE" ]; then
+            if [ -z "$source" ]; then
                 echo "Error: Please provide a filename for 'del' command."
                 usage
             else
-                verify_source "$SOURCE"
-                run_command "rm -r" "$SOURCE"
+                verify_source "$source"
+                run_command "rm -r" "$source"
             fi
             ;;
 
@@ -194,39 +198,39 @@ function handle_command() {
             ;;
 
         *)
-            echo "Error: Invalid command '$COMMAND'."
+            echo "Error: Invalid command '$command'."
             usage
             ;;
 			
 		# SPECIAL CASES
 		
 		"move!")
-            if [ -z "$SOURCE" ] || [ -z "$DESTINATION" ]; then
+            if [ -z "$source" ] || [ -z "$destination" ]; then
                 echo "Error: 'move' command requires source and destination filenames."
                 usage
             else
-                verify_source "$SOURCE"
-                run_command "mv -f" "$SOURCE" "$DESTINATION"
+                verify_source "$source"
+                run_command "mv -f" "$source" "$destination"
             fi
             ;;
 			
         "ren!")
-            if [ -z "$SOURCE" ] || [ -z "$DESTINATION" ]; then
+            if [ -z "$source" ] || [ -z "$destination" ]; then
                 echo "Error: 'ren' command requires source and destination filenames."
                 usage
             else
-                verify_source "$SOURCE"
-                run_command "mv -f" "$SOURCE" "$DESTINATION"
+                verify_source "$source"
+                run_command "mv -f" "$source" "$destination"
             fi
             ;;
 			
         "copy!")
-            if [ -z "$SOURCE" ] || [ -z "$DESTINATION" ]; then
+            if [ -z "$source" ] || [ -z "$destination" ]; then
                 echo "Error: 'copy' command requires source and destination filenames."
                 usage
             else
-                verify_source "$SOURCE"
-                run_command "cp -f" "$SOURCE" "$DESTINATION"
+                verify_source "$source"
+                run_command "cp -f" "$source" "$destination"
             fi
             ;;
     esac
@@ -236,7 +240,7 @@ function handle_command() {
 if [ -z "$COMMAND" ]; then
     interactive_mode
 else
-	handle_command
+	handle_command "$COMMAND" "$SOURCE" "$DESTINATION"
 fi
 
 exit 0
