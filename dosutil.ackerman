@@ -80,6 +80,31 @@ verify_no_dest() {
 # Function to perform actions interactively
 interactive_mode() {
     local files=($(ls))
+	
+	PS3="Select a sorting option: "
+    select sort_option in "Name" "Age" "Size" "None"; do
+        case $sort_option in
+            "Name")
+                files=($(ls | sort))
+                break
+                ;;
+            "Age")
+                files=($(ls -lt | awk '{print $9}'))
+                break
+                ;;
+            "Size")
+                files=($(ls -lS | awk '{print $9}'))
+                break
+                ;;
+            "None")
+                break
+                ;;
+            *)
+                echo "Invalid option."
+                ;;
+        esac
+    done
+	
     PS3="Select a file/directory: "
     select file in "${files[@]}"; do
         if [ -n "$file" ]; then
