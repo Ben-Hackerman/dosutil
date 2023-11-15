@@ -87,11 +87,11 @@ interactive_mode() {
             select cmd in "type" "copy" "ren" "del" "move" "help" "copy!" "move!" "ren!"; do
                 case $cmd in
                     "type"|"del"|"help")
-                        run_command "$cmd" "$file"
+                        handle_command "$cmd" "$file"
                         ;;
                     "copy"|"ren"|"move"|"copy!"|"ren!"|"move!")
                         read -p "Enter destination: " destination
-                        run_command "$cmd" "$file" "$destination"
+                        handle_command "$cmd" "$file" "$destination"
                         ;;
                     *)
                         echo "Invalid command."
@@ -128,10 +128,9 @@ run_command() {
     fi
 }
 
-# Implement DOS/Windows command emulation
-if [ -z "$COMMAND" ]; then
-    interactive_mode
-else
+
+# handles translation from UNIX to DOS
+function handle_command() {
     case "$COMMAND" in
         "author")
             echo "Ben Ackerman"
@@ -230,8 +229,14 @@ else
                 run_command "cp -f" "$SOURCE" "$DESTINATION"
             fi
             ;;
-			
     esac
+}
+
+# Implement DOS/Windows command emulation
+if [ -z "$COMMAND" ]; then
+    interactive_mode
+else
+	handle_command
 fi
 
 exit 0
