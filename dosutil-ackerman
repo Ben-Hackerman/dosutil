@@ -77,8 +77,43 @@ verify_no_dest() {
     fi
 }
 
+# Function to perform actions interactively
+interactive_mode() {
+    local files=($(ls))
+    PS3="Select a file/directory: "
+    select file in "${files[@]}"; do
+        if [ -n "$file" ]; then
+            PS3="Select a command: "
+            select cmd in "type" "copy" "ren" "del" "move" "help" "copy!" "del!" "ren!"; do
+                case $cmd in
+                    "type"|"del"|"move"|"help")
+                        run_command "$cmd" "$file"
+                        ;;
+                    "copy"|"ren")
+                        read -p "Enter destination: " destination
+                        run_command "$cmd" "$file" "$destination"
+                        ;;
+                    "copy!"|"del!"|"ren!")
+                        read -p "Enter destination: " destination
+                        read -p "Are you sure? (y/n): " confirm
+                        if [ "$confirm" == "y" ]; then
+                            run_command "${cmd%?}" "$file" "$destination"
+                        else
+                            echo "Operation canceled."
+                        fi
+                        ;;
+                    *)
+                        echo "Invalid command."
+                        ;;
+                esac
+                break
+            done
+        fi
+        break
+    done
+}
 
-# Define a function to execute UNIX commands and verify their success
+# Function to execute UNIX commands and verify their success
 run_command() {
     local command="$1"
     local source="$2"
@@ -103,72 +138,76 @@ run_command() {
 }
 
 # Implement DOS/Windows command emulation
-case "$COMMAND" in
-    "author")
-        echo "Ben Ackerman"
-        ;;
+if [ -z "$COMMAND" ]; then
+    interactive_mode
+else
+    case "$COMMAND" in
+        "author")
+            echo "Ben Ackerman"
+            ;;
 
-    "type")
-        if [ -z "$SOURCE" ]; then
-            echo "Error: Please provide a file name for 'type' command."
+        "type")
+            if [ -z "$SOURCE" ]; then
+                echo "Error: Please provide a file name for 'type' command."
+                usage
+            else
+                verify_source "$SOURCE"
+                cat "$SOURCE"
+            fi
+            ;;
+
+        "copy")
+            if [ -z "$SOURCE" ] || [ -z "$DESTINATION" ]; then
+                echo "Error: 'copy' command requires source and destination filenames."
+                usage
+            else
+                verify_source "$SOURCE"
+                verify_no_dest "$DESTINATION"
+                run_command "cp" "$SOURCE" "$DESTINATION"
+            fi
+            ;;
+
+        "ren")
+            if [ -z "$SOURCE" ] || [ -z "$DESTINATION" ]; then
+                echo "Error: 'ren' command requires source and destination filenames."
+                usage
+            else
+                verify_source "$SOURCE"
+                verify_no_dest "$DESTINATION"
+                run_command "mv" "$SOURCE" "$DESTINATION"
+            fi
+            ;;
+
+        "move")
+            if [ -z "$SOURCE" ] || [ -z "$DESTINATION" ]; then
+                echo "Error: 'move' command requires source and destination filenames."
+                usage
+            else
+                verify_source "$SOURCE"
+                verify_no_dest "$DESTINATION"
+                run_command "mv" "$SOURCE" "$DESTINATION"
+            fi
+            ;;
+
+        "del")
+            if [ -z "$SOURCE" ]; then
+                echo "Error: Please provide a filename for 'del' command."
+                usage
+            else
+                verify_source "$SOURCE"
+                run_command "rm -r" "$SOURCE"
+            fi
+            ;;
+
+        "help")
             usage
-        else
-            verify_source "$SOURCE"
-            cat "$SOURCE"
-        fi
-        ;;
+            ;;
 
-    "copy")
-        if [ -z "$SOURCE" ] || [ -z "$DESTINATION" ]; then
-            echo "Error: 'copy' command requires source and destination filenames."
+        *)
+            echo "Error: Invalid command '$COMMAND'."
             usage
-        else
-            verify_source "$SOURCE"
-            verify_no_dest "$DESTINATION"
-            run_command "cp" "$SOURCE" "$DESTINATION"
-        fi
-        ;;
-
-    "ren")
-        if [ -z "$SOURCE" ] || [ -z "$DESTINATION" ]; then
-            echo "Error: 'ren' command requires source and destination filenames."
-            usage
-        else
-            verify_source "$SOURCE"
-            verify_no_dest "$DESTINATION"
-            run_command "mv" "$SOURCE" "$DESTINATION"
-        fi
-        ;;
-
-    "move")
-        if [ -z "$SOURCE" ] || [ -z "$DESTINATION" ]; then
-            echo "Error: 'move' command requires source and destination filenames."
-            usage
-        else
-            verify_source "$SOURCE"
-            verify_no_dest "$DESTINATION"
-            run_command "mv" "$SOURCE" "$DESTINATION"
-        fi
-        ;;
-
-    "del")
-        if [ -z "$SOURCE" ]; then
-            echo "Error: Please provide a filename for 'del' command."
-            usage
-        else
-            verify_source "$SOURCE"
-            run_command "rm -r" "$SOURCE"
-        fi
-        ;;
-
-    "help")
-        usage
-        ;;
-
-    *)
-        echo "Error: Invalid command '$COMMAND'."
-        usage
-        ;;
-esac
+            ;;
+    esac
+fi
 
 exit 0
